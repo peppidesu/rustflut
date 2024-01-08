@@ -12,7 +12,7 @@ fn main() {
     let mut pool = NetWorkerPool::new();
 
     let text_renderer = TextRenderer::new();
-    let color = Color::rgb(255, 0, 0);
+    let color = Color::rgb(255, 32, 48);
     
     let mut y = 200;
     let mut dy: i32 = 1;
@@ -21,12 +21,16 @@ fn main() {
             dy = -dy;
         }
         y += dy;
-        let text = "didn't bother with license yet one sec";
+        let text = "rust rules!";
         let text_px_vec = text_renderer.render_bg(text, color.clone(), Pos::new(100, y as u16));
+        pool.write_px_vec(text_px_vec);
+
+        let text = "repo: peppidesu/rustflut";
+        let text_px_vec = text_renderer.render_bg(text, color.clone(), Pos::new(100, y as u16 + 50));
         pool.write_px_vec(text_px_vec);
         
     }
-    thread::sleep(Duration::from_millis(40));
+    
     
 }
 

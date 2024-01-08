@@ -11,7 +11,7 @@ impl TextRenderer {
     pub fn new() -> TextRenderer {
         let font_data = include_bytes!("../resources/Comfortaa-Regular.ttf");
         let font = Font::try_from_bytes(font_data as &[u8]).unwrap();
-        let scale = Scale::uniform(64.0);
+        let scale = Scale::uniform(48.0);
         let v_metrics = font.v_metrics(scale);
         TextRenderer {
             font,

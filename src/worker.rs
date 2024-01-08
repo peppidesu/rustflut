@@ -63,12 +63,9 @@ impl NetWorkerPool {
 
         let chunks = px_vec.chunks(px_vec.len() / self.workers.len()).collect::<Vec<_>>();
 
-        let scope = self.pool.scope(|s| {
+        self.pool.scope(|s| {
             for (worker, chunk) in self.workers.iter_mut().zip(chunks) {
                 s.spawn(move |_| {
-                    let mut rng = rand::thread_rng();
-                    let mut chunk = chunk.to_vec();
-                    chunk.shuffle(&mut rng);
                     worker.write_px_vec(chunk.to_vec());
                 });
             }
