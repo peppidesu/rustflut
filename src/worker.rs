@@ -1,5 +1,7 @@
 use std::net::TcpStream;
 use std::io::prelude::*;
+use rand::seq::SliceRandom;
+
 use crate::pixel::*;
 
 const HOST: &str = "pixelflut.uwu.industries:1234";
@@ -58,11 +60,15 @@ impl NetWorkerPool {
     }
 
     pub fn write_px_vec(&mut self, px_vec: Vec<Pixel>) {
+
         let chunks = px_vec.chunks(px_vec.len() / self.workers.len()).collect::<Vec<_>>();
 
         let scope = self.pool.scope(|s| {
             for (worker, chunk) in self.workers.iter_mut().zip(chunks) {
                 s.spawn(move |_| {
+                    let mut rng = rand::thread_rng();
+                    let mut chunk = chunk.to_vec();
+                    chunk.shuffle(&mut rng);
                     worker.write_px_vec(chunk.to_vec());
                 });
             }

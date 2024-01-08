@@ -1,6 +1,8 @@
 use std::fmt::{Display, Formatter, Result};
 
-#[derive(Clone)]
+use crate::pos::Pos;
+
+#[derive(Clone, Copy)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -39,23 +41,22 @@ impl Display for Color {
 }
 
 
-#[derive(Clone)]
+
+#[derive(Clone, Copy)]
 pub struct Pixel {
-    x: u16,
-    y: u16,
+    pos: Pos,
     color: Color
 }
 
 impl Pixel {
-    pub fn new(x: u16, y: u16, color: Color) -> Pixel {
+    pub fn new(pos: Pos, color: Color) -> Pixel {
         Pixel {
-            x,
-            y,
-            color
+            pos,
+            color,
         }
     }
 
     pub fn to_string(&self) -> String {
-        format!("PX {} {} {}", self.x, self.y, self.color)
+        format!("PX {} {}", self.pos, self.color)
     }
 }
