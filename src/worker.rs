@@ -1,6 +1,5 @@
 use std::net::TcpStream;
 use std::io::prelude::*;
-use rayon::prelude::*;
 use crate::pixel::*;
 
 const HOST: &str = "pixelflut.uwu.industries:1234";
