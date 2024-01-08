@@ -60,13 +60,15 @@ impl NetWorkerPool {
     pub fn write_px_vec(&mut self, px_vec: Vec<Pixel>) {
         let chunks = px_vec.chunks(px_vec.len() / self.workers.len()).collect::<Vec<_>>();
 
-        self.pool.scope(|s| {
+        let scope = self.pool.scope(|s| {
             for (worker, chunk) in self.workers.iter_mut().zip(chunks) {
                 s.spawn(move |_| {
                     worker.write_px_vec(chunk.to_vec());
                 });
             }
         });
+
+        
         
     }
 }
