@@ -1,25 +1,40 @@
 use std::fmt::{Display, Formatter, Result};
-use rand::*;
+
 #[derive(Clone)]
 pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8
 }
 
 impl Color {
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
+    pub fn rgb(r: u8, g: u8, b: u8) -> Color {
         Color {
             r,
             g,
-            b
+            b,
+            a: 255
+        }
+    }
+    pub fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
+        Color {
+            r,
+            g,
+            b,
+            a
         }
     }
 }
 
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{:02x}{:02x}{:02x}", self.r, self.g, self.b)
+        if self.a == 255 {
+            write!(f, "{:02x}{:02x}{:02x}", self.r, self.g, self.b)
+        }
+        else {
+            write!(f, "{:02x}{:02x}{:02x}{:02x}", self.r, self.g, self.b, self.a)
+        }
     }
 }
 
