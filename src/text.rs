@@ -1,6 +1,6 @@
 use rusttype::{point, Font, Scale};
 
-use crate::{Pixel, Color, Pos};
+use crate::{Pixel, Color, Point, PixelBuffer, Bounds};
 pub struct TextRenderer {
     font: Font<'static>,
     scale: Scale,
@@ -20,7 +20,7 @@ impl TextRenderer {
         }
     }
 
-    pub fn render_transparent(&self, text: &str, color: Color, pos: Pos) -> Vec<Pixel> {
+    pub fn render_transparent(&self, text: &str, color: Color, pos: Point) -> Vec<Pixel> {
         
         let glyphs: Vec<_> = self.font.layout(text, self.scale, point(0.0, 0.0 + self.v_metrics.ascent)).collect();
         let mut px_vec = Vec::new();
@@ -35,14 +35,14 @@ impl TextRenderer {
                     );
                     let x = x as i32 + bounding_box.min.x + pos.x as i32;
                     let y = y as i32 + bounding_box.min.y + pos.y as i32;
-                    let px = Pixel::new(Pos::new(x as u16, y as u16), c);
+                    let px = Pixel::new(Point::new(x as u16, y as u16), c);
                     px_vec.push(px);
                 });
             }
         }
         px_vec
     }
-    pub fn render_bg(&self, text: &str, color: Color, pos: Pos) -> Vec<Pixel> {
+    pub fn render_bg(&self, text: &str, color: Color, pos: Point, buffer: &mut PixelBuffer) {
         
         let glyphs: Vec<_> = self.font.layout(text, self.scale, point(0.0, 0.0 + self.v_metrics.ascent)).collect();
         let mut xmin = 0;
@@ -66,43 +66,41 @@ impl TextRenderer {
                 }
             }
         }
+
+        let bounds = Bounds::new(
+            Point::new(xmin as u16 + pos.x, ymin as u16 + pos.y), 
+            Point::new((xmax+4) as u16 + pos.x, (ymax+4) as u16 + pos.y)
+        );
         
-        let width = xmax - xmin + 2;
-        let height = ymax - ymin + 2;
-
-        let mut bitmap = Vec::new();
-        bitmap.resize((width * height) as usize, 0u8);
-
+        buffer.fill_bounds(
+            bounds,
+            Color::rgb(0, 0, 0)
+        );
+        
         for glyph in glyphs {
             if let Some(bb) = glyph.pixel_bounding_box() {
+                // glyph.draw(|x, y, v| {
+                //     if v > 0.01 {
+                //         let x = x as i32 + bb.min.x + 2;
+                //         let y = y as i32 + bb.min.y + 2;
+                //         let c = Color::rgba(
+                //             color.r, color.g, color.b, (v * 255.0) as u8
+                //         );
+                //         buffer.set(Pixel::new(Point::new(x as u16 + pos.x, y as u16 + pos.y), c));
+                //     }
+                // });
                 glyph.draw(|x, y, v| {
-                    if v > 0.001 {
-                        let x = x as i32 + bb.min.x + 1;
-                        let y = y as i32 + bb.min.y + 1;
-                        let idx = (x + y * width) as usize;
-                        bitmap[idx] = (v * 255.0) as u8;
+                    if v > 0.01 {
+                        let x = x as i32 + bb.min.x + 2;
+                        let y = y as i32 + bb.min.y + 2;
+                        let c = Color::rgba(
+                            color.r, color.g, color.b, (v * 255.0) as u8
+                        );
+                        buffer.set(Pixel::new(Point::new(x as u16 + pos.x, y as u16 + pos.y), c));
                     }
                 });
             }
         }
         
-        let mut px_vec = Vec::new();
-        for x in 0..width {
-            for y in 0..height {
-                let idx = (x + y * width) as usize;
-                let x = x as i32 + pos.x as i32 + xmin;
-                let y = y as i32 + pos.y as i32 + ymin;
-                if bitmap[idx] > 0 {
-                    
-                    let px = Pixel::new(Pos::new(x as u16, y as u16), color);
-                    px_vec.push(px);
-                }
-                else {
-                    let px = Pixel::new(Pos::new(x as u16, y as u16), Color::rgb(0, 0, 0));
-                    px_vec.push(px);
-                }
-            }
-        }
-        px_vec
     }
 }

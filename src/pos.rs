@@ -1,37 +1,32 @@
 use std::fmt::{Display, Formatter, Result};
 
-#[derive(Clone,Copy)]
-pub struct Pos {
+#[derive(Clone,Copy, PartialEq, Eq, Hash, Debug)]
+pub struct Point {
     pub x: u16,
     pub y: u16
 }
 
-impl Pos {
-    pub fn new(x: u16, y: u16) -> Pos {
-        Pos {
-            x,
-            y
-        }
+impl Point {
+    pub fn new(x: u16, y: u16) -> Point {
+        Point { x, y }
     }
 }
 
-impl Display for Pos {
+impl Display for Point {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{} {}", self.x, self.y)
     }
 }
 
+#[derive(Debug)]
 pub struct Bounds {
-    pub min: Pos,
-    pub max: Pos
+    pub min: Point,
+    pub max: Point
 }
 
 impl Bounds {
-    pub fn new(min: Pos, max: Pos) -> Bounds {
-        Bounds {
-            min,
-            max
-        }
+    pub fn new(min: Point, max: Point) -> Bounds {
+        Bounds { min, max }
     }
 }
 

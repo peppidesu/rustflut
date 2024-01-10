@@ -9,6 +9,7 @@ edition = "2021"
 criterion = "0.5.1"
 
 [dependencies]
+itertools = "0.12.0"
 rand = "0.8.5"
 rayon = "1.8.0"
 rusttype = "0.9.3"
