@@ -2,9 +2,9 @@ use std::{net::TcpStream, sync::Mutex};
 use std::io::prelude::*;
 
 
-use crate::{pixel::*, Bounds, Point};
+use crate::{pixel::*, Rect, Point, PixelBuffer};
 
-const HOST: &str = "pixelflut.uwu.industries:1234";
+const HOST: &str = "pixelflut.peppidesu.dev:55282";
 
 pub struct NetWorker {
     stream: TcpStream
@@ -19,21 +19,11 @@ impl NetWorker {
     }
 
     pub fn write_px(&mut self, px: &Pixel) {
-        let msg = px.to_string();
-        self.stream.write(msg.as_bytes()).unwrap();
+        let msg = px.to_cmd();
+        self.stream.write(&msg).unwrap();
     }
 
-    pub fn get_px(&mut self, pos: Point) -> Pixel {           
-        let msg = format!("PX {} {}", pos.x, pos.y);
-        self.stream.write(msg.as_bytes()).unwrap();
-
-        let mut buf = [0; 24];
-        
-        
-        let len = self.stream.read(&mut buf).unwrap();   
-        
-        Pixel::from_str(&String::from_utf8_lossy(&buf[..len]))       
-    }
+    
 
     pub fn get_px_vec(&mut self, points: Vec<Point>) -> Vec<Pixel> {
         let mut msg = String::new();
@@ -45,18 +35,26 @@ impl NetWorker {
         
         let mut msg = String::new();
         
-        let mut buf = [0; 128];
-        loop {
-            let len = self.stream.read(&mut buf).unwrap();
-                     
+        let mut buf = [0; 2048];
+        let mut nlcount = 1;
+        
+        loop {            
+            let len = self.stream.read(&mut buf).unwrap();            
+            let s = String::from_utf8_lossy(&buf[..len]);
             
-            msg.push_str(&String::from_utf8_lossy(&buf[..len]));            
-            if len < 128 {                
+            msg.push_str(&s);            
+            nlcount += s.matches("\n").count();
+            
+            if nlcount >= points.len() {                
+            
+                
                 break;
             }
+            
         }
-        println!("{}", msg);
+        
         msg.split("\n")
+            .filter(|s| !s.is_empty())
             .map(|s| Pixel::from_str(s))
             .collect::<Vec<Pixel>>()
     }
@@ -64,25 +62,23 @@ impl NetWorker {
     pub fn write_px_vec(&mut self, px_vec: Vec<Pixel>) {
         // use write_all
         let msg = px_vec.into_iter()
-            .map(|px| px.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let bytes = msg.as_bytes();
-        self.stream.write_all(bytes).unwrap();
+            .map(|px| px.to_cmd())
+            .flatten()
+            .collect::<Vec<u8>>();            
+        self.stream.write_all(&msg).unwrap();
     }
 
-    pub fn get_px_bounds(&mut self, bounds: &Bounds) -> Vec<Pixel> {
+    pub fn get_px_bounds(&mut self, bounds: &Rect) -> Vec<Pixel> {
         
-        let mut px_vec = Vec::new();
-        for y in bounds.min.y..bounds.max.y {
-            for x in bounds.min.x..bounds.max.x {
-                
-                let pos = Point::new(x, y);
-                let px = self.get_px(pos);
-                px_vec.push(px);
-            }
-        }
-        px_vec
+        let mut point_vec = Vec::new();
+        
+        (bounds.min.y..bounds.max.y).into_iter().for_each(|y| {
+            (bounds.min.x..bounds.max.x).into_iter().for_each(|x| {
+                point_vec.push(Point::new(x, y));
+            });
+        });
+
+        self.get_px_vec(point_vec)
     }
 }
 
@@ -122,8 +118,8 @@ impl NetWorkerPool {
     }
 
 
-    pub fn get_px_region(&mut self, bounds: Bounds) -> Vec<Pixel> {
-        let px_vec = Mutex::new(Vec::new());
+    pub fn get_px_bounds(&mut self, bounds: &Rect, buffer: &mut PixelBuffer) {
+        let buffer = Mutex::new(buffer);
         
         
         let chunk_height = (bounds.max.y - bounds.min.y) / self.workers.len() as u16;
@@ -133,22 +129,26 @@ impl NetWorkerPool {
                 
                 let min = Point::new(bounds.min.x, y);
                 let max = Point::new(bounds.max.x, y + chunk_height);
-                Bounds::new(min, max)
+                Rect::new(min, max)
             });
         
         self.pool.scope(|s| {
-            let px_vec = &px_vec;
+            let buffer = &buffer;
             for (worker, chunk) in self.workers.iter_mut().zip(chunks) {
                 s.spawn(move |_| {
-                     
+                    
                     let mut thread_px_vec = worker.get_px_bounds(&chunk);
                      
-                    px_vec.lock().unwrap().append(&mut thread_px_vec);
+                    let mut buffer = buffer.lock().unwrap();
+                    for px in thread_px_vec.drain(..) {
+                        buffer.set(px);
+                        
+                    }
                 });
             }
         });
+        
 
-
-        px_vec.into_inner().unwrap()
+        
     }
 }

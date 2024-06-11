@@ -1,8 +1,9 @@
-pub const WIDTH: u16 = 1280;
-pub const HEIGHT: u16 = 720;
+pub const WIDTH: u16 = 800;
+pub const HEIGHT: u16 = 600;
 mod pixel;
 mod worker;
 mod text;
+#[macro_use]
 mod pos;
 mod buffer;
 

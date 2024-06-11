@@ -1,6 +1,6 @@
 use rusttype::{point, Font, Scale};
 
-use crate::{Pixel, Color, Point, PixelBuffer, Bounds};
+use crate::{Pixel, Color, Point, PixelBuffer, Rect};
 pub struct TextRenderer {
     font: Font<'static>,
     scale: Scale,
@@ -66,8 +66,8 @@ impl TextRenderer {
                 }
             }
         }
-
-        let bounds = Bounds::new(
+        
+        let bounds = Rect::new(
             Point::new(xmin as u16 + pos.x, ymin as u16 + pos.y), 
             Point::new((xmax+4) as u16 + pos.x, (ymax+4) as u16 + pos.y)
         );

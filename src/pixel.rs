@@ -2,9 +2,9 @@ use std::fmt::{Display, Formatter, Result};
 
 use rand::{Rng, rngs::ThreadRng};
 
-use crate::pos::Point;
+use crate::{point, Point};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -104,11 +104,12 @@ impl Display for Color {
 
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Pixel {
     pub pos: Point,
     pub color: Color
 }
+
 
 impl Pixel {
     pub fn new(pos: Point, color: Color) -> Pixel {
@@ -122,18 +123,42 @@ impl Pixel {
         let mut iter = s.split_whitespace();
         
         iter.next();
+        
         let x = iter.next().unwrap().parse::<u16>().unwrap();
         let y = iter.next().unwrap().parse::<u16>().unwrap();
         let color = Color::from_str(iter.next().unwrap());
         
         Pixel {
-            pos: Point::new(x, y),
+            pos: point!(x, y),
             color
         }
     }
 
-    pub fn to_string(&self) -> String {
-        format!("PX {} {}", self.pos, self.color)
+    pub fn to_cmd(&self) -> Vec<u8> {
+        let mut cmd: Vec<u8> = Vec::with_capacity(8);
+
+        cmd.push(0xB0);
+        cmd.extend(self.pos.x.to_be_bytes());
+        cmd.extend(self.pos.y.to_be_bytes());
+        cmd.push(self.color.r);
+        cmd.push(self.color.g);
+        cmd.push(self.color.b);
+        cmd
     }
 }
 
+#[macro_export]
+macro_rules! color {
+    ($r:expr, $g:expr, $b:expr) => {
+        Color::rgb($r, $g, $b)
+    };
+    ($r:expr, $g:expr, $b:expr, $a:expr) => {
+        Color::rgba($r, $g, $b, $a)
+    };
+    ($hex:expr) => {
+        Color::from_str($hex)
+    };
+    ($c:expr, $a:expr) => {
+        Color::rgba($c.r, $c.g, $c.b, $a)
+    };
+}

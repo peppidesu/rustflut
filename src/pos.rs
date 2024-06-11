@@ -19,19 +19,40 @@ impl Display for Point {
 }
 
 #[derive(Debug)]
-pub struct Bounds {
+pub struct Rect {
     pub min: Point,
     pub max: Point
 }
 
-impl Bounds {
-    pub fn new(min: Point, max: Point) -> Bounds {
-        Bounds { min, max }
+impl Rect {
+    pub fn new(min: Point, max: Point) -> Rect {
+        Rect { min, max }
     }
 }
 
-impl Display for Bounds {
+impl Display for Rect {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{} {}", self.min, self.max)
     }
+}
+
+#[macro_export]
+macro_rules! rect_xywh {
+    ($x:expr, $y:expr, $w:expr, $h:expr) => {
+        Rect::new(Point::new($x, $y), Point::new($x + $w, $y + $h))
+    };
+}
+
+#[macro_export]
+macro_rules! rect_p1p2 {
+    ($x1:expr, $y1:expr, $x2:expr, $y2:expr) => {
+        Rect::new(Point::new($x1, $y1), Point::new($x2, $y2))
+    };
+}
+
+#[macro_export]
+macro_rules! point {
+    ($x:expr, $y:expr) => {
+        Point::new($x, $y)
+    };
 }
