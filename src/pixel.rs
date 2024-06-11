@@ -40,7 +40,18 @@ impl Pixel {
         }
     }
 
-    pub fn to_string(&self) -> String {
-        format!("PX {} {} {}", self.x, self.y, self.color)
+    pub fn to_cmd(&self) -> Vec<u8> {
+        let mut cmd: Vec<u8> = Vec::new();
+        
+        cmd.push(0xB0);
+
+        cmd.extend(self.x.to_be_bytes());
+        cmd.extend(self.y.to_be_bytes());
+
+        cmd.push(self.color.r);
+        cmd.push(self.color.g);
+        cmd.push(self.color.b);
+
+        cmd
     }
 }

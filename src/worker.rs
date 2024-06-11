@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use rayon::prelude::*;
 use crate::pixel::*;
 
-const HOST: &str = "pixelflut.uwu.industries:1234";
+const HOST: &str = "pixelflut.peppidesu.dev:55282";
 
 pub struct NetWorker {
     stream: TcpStream
@@ -18,18 +18,17 @@ impl NetWorker {
     }
 
     pub fn write_px(&mut self, px: &Pixel) {
-        let msg = px.to_string();
-        self.stream.write(msg.as_bytes()).unwrap();
+        let msg = px.to_cmd();
+        self.stream.write(&msg).unwrap();
     }
 
     pub fn write_px_vec(&mut self, px_vec: Vec<Pixel>) {
         // use write_all
         let msg = px_vec.iter()
-            .map(|px| px.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let bytes = msg.as_bytes();
-        self.stream.write_all(bytes).unwrap();
+            .flat_map(|px| px.to_cmd())
+            .collect::<Vec<u8>>();        
+
+        self.stream.write_all(&msg).unwrap();
     }
 }
 
